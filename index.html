@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Carver: 5 Combos Edition</title>
+    <style>
+        :root { --bg: #0f0f13; --panel: #1a1a24; --text: #e0e0e0; --accent: #00ffcc; --danger: #ff3366; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; text-align: center; }
+        h1 { color: var(--accent); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+        p { color: #888; margin-top: 0; }
+        
+        .header-panel { background: var(--panel); border: 1px solid #333; border-radius: 10px; padding: 15px; max-width: 600px; margin: 20px auto; display: flex; justify-content: space-around; align-items: center; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .header-panel div { display: flex; flex-direction: column; }
+        .header-panel span { font-weight: bold; color: var(--accent); font-size: 1.4rem; }
+        .header-panel span.danger { color: var(--danger); }
+        
+        .word-container { display: flex; flex-wrap: wrap; justify-content: center; margin: 30px auto; background: #111116; padding: 20px; border-radius: 12px; max-width: 800px; }
+        .letter { width: 65px; height: 90px; margin: 4px; display: inline-block; }
+        
+        .interactive line { cursor: pointer; transition: all 0.1s ease; }
+        .interactive line:hover { stroke-width: 12; opacity: 0.8; }
+        .seg-on { stroke: var(--accent); filter: drop-shadow(0 0 3px var(--accent)); }
+        .seg-off { stroke: #22222a; }
+        .seg-invalid { stroke: var(--danger); filter: drop-shadow(0 0 3px var(--danger)); }
+
+        .stats-box { margin: 15px auto; color: #aaa; font-size: 1.1rem; max-width: 600px; }
+        .parsed-text { font-size: 1.8rem; letter-spacing: 3px; color: #fff; margin: 10px 0; background: #222; padding: 15px; border-radius: 8px; min-height: 35px; display: flex; justify-content: center; align-items: center; }
+        .parsed-text span.invalid { color: var(--danger); }
+        
+        .controls { margin: 20px 0; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        button { padding: 15px 25px; border-radius: 8px; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #00ccaa; transform: scale(1.05); }
+        .btn-primary:disabled { background: #555; cursor: not-allowed; transform: none; }
+        .btn-secondary { background: #444; color: #fff; }
+        .btn-secondary:hover { background: #555; }
+        .btn-share { background: #1da1f2; color: #fff; }
+        .btn-share:hover { background: #0c85d0; }
+        .btn-dev { background: #ffaa00; color: #000; font-size: 0.8rem; padding: 10px 15px; }
+
+        .banner { background-color: #ffaa00; color: #000; padding: 10px; font-weight: bold; border-radius: 5px; margin-bottom: 15px; display: inline-block; }
+
+        .gallery { max-width: 800px; margin: 40px auto; text-align: left; }
+        .gallery-item { background: var(--panel); padding: 15px; margin: 15px 0; border-radius: 8px; border-left: 5px solid var(--accent); display: flex; align-items: center; justify-content: space-between; }
+        .gallery-svgs { display: flex; }
+        .gallery-svgs .letter { width: 35px; height: 49px; margin: 2px; }
+        .gallery-info { text-align: right; min-width: 200px; }
+        .gallery-info h3 { margin: 0 0 5px 0; color: #fff; text-transform: uppercase; }
+        .gallery-info p { margin: 0; font-size: 0.9rem; color: #aaa; }
+    </style>
+</head>
+<body>
+
+    <h1>Daily Carver</h1>
+    <p id="date-display">Loading...</p>
+    
+    <div id="banner" class="banner">Loading Dictionary... Please wait.</div>
+
+    <div class="header-panel">
+        <div>Combos Found <span id="combos-count">0/5</span></div>
+        <div>Carves Left <span id="edits-left">20</span></div>
+        <div>Total Score <span id="global-score">0</span></div>
+    </div>
+
+    <div class="word-container" id="main-word"></div>
+
+    <div class="stats-box">
+        <div class="parsed-text" id="parsed-reading">-</div>
+        Words Found: <strong id="current-valid-word" style="color: #fff;">None</strong> | 
+        Projected Score: <strong id="proj-score" style="color: var(--accent);">0</strong>
+    </div>
+
+    <div class="controls">
+        <button class="btn-secondary" onclick="resetBoard()">Reset to Base Word</button>
+        <button class="btn-primary" id="submit-btn" onclick="saveCombo()" disabled>Bank Combo</button>
+        <button class="btn-share" onclick="shareScore()">Share Today's Result 🔗</button>
+    </div>
+    
+    <div class="controls" style="margin-top: 50px; border-top: 1px solid #333; padding-top: 20px;">
+        <button class="btn-dev" onclick="devReset()">[DEV] Reset Local Storage</button>
+    </div>
+
+    <div class="gallery" id="gallery-container"></div>
+
+    <script>
+        const START_DATE = new Date("2026-01-01T00:00:00").getTime();
+        const DAILY_WORDS = [
+            'BARTENDER', 'ATMOSPHERE', 'REVOLUTION', 'CATASTROPHE', 'TECHNOLOGY', 
+            'BLACKSMITH', 'LUMBERJACK', 'KALEIDOSCOPE', 'AMBASSADOR', 'DICTIONARY', 
+            'APARTMENT', 'PNEUMATIC', 'BACKGROUND', 'CAMPGROUND', 'COMPANION', 
+            'EARTHQUAKE', 'FINGERPRINT', 'GREENHOUSE', 'HONEYCOMB', 'MOTORCYCLE', 
+            'STRAWBERRY', 'WATERMELON', 'WONDERFUL', 'YESTERDAY', 'ZEPPELIN'
+        ];
+        
+        let todayDateStr = new Date().toDateString();
+        let daysPassed = Math.floor((new Date().getTime() - START_DATE) / (1000 * 60 * 60 * 24));
+        let dailyWord = DAILY_WORDS[daysPassed % DAILY_WORDS.length];
+
+        document.getElementById('date-display').innerText = `Daily Challenge #${daysPassed} - Base Word: ${dailyWord}`;
+
+        const MAX_EDITS = 20;
+        const MAX_COMBOS = 5;
+        let dictionary = new Set();
+        let isDictLoaded = false;
+        
+        let startingState = []; 
+        let currentState = []; 
+        let editsMade = 0; 
+        
+        let globalScore = 0;
+        let usedWordsThisSession = []; // To store the combo strings for the gallery
+        let usedIndividualWords = new Set(); // To prevent reusing the same sub-word
+        let carvesRecord = []; // Store the carve signatures for sharing
+        
+        let moveBaseScore = 0;
+        let bestValidWordsArr = [];
+        let canSubmit = false;
+        let isGameLocked = false;
+
+        async function loadDictionary() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const response = await fetch('https://raw.githubusercontent.com/redbo/scrabble/master/dictionary.txt', { signal: controller.signal });
+                clearTimeout(timeoutId);
+                const text = await response.text();
+                text.split('\n').forEach(w => dictionary.add(w.trim().toUpperCase()));
+                isDictLoaded = true;
+                document.getElementById('banner').style.display = 'none';
+            } catch (e) {
+                document.getElementById('banner').innerText = "Offline Mode: Dictionary unreachable. Validating all non-red letters.";
+                document.getElementById('banner').style.backgroundColor = "#555";
+                document.getElementById('banner').style.color = "#fff";
+            }
+            checkGameState();
+        }
+
+        const MAPPING = {
+            'A': [[1,1,1,0,1,1,1,1,0,0,0,0,0,0], [1,1,1,1,1,1,1,1,0,0,0,0,0,0]],
+            'B': [[1,1,1,1,0,0,1,1,0,1,0,0,1,0], [0,0,1,1,1,1,1,1,0,0,0,0,0,0]],
+            'C': [[1,0,0,1,1,1,0,0,0,0,0,0,0,0], [0,0,0,1,1,0,1,0,0,0,0,0,0,0]],
+            'D': [[1,1,1,1,0,0,0,0,0,1,0,0,1,0], [0,1,1,1,1,0,1,1,0,0,0,0,0,0]],
+            'E': [[1,0,0,1,1,1,1,1,0,0,0,0,0,0], [1,1,0,1,1,1,1,1,0,0,0,0,0,0]],
+            'F': [[1,0,0,0,1,1,1,0,0,0,0,0,0,0]],
+            'G': [[1,0,1,1,1,1,0,1,0,0,0,0,0,0]],
+            'H': [[0,1,1,0,1,1,1,1,0,0,0,0,0,0], [0,0,1,0,1,1,1,1,0,0,0,0,0,0]],
+            'I': [[1,0,0,1,0,0,0,0,0,1,0,0,1,0], [0,0,0,0,0,0,0,0,0,1,0,0,1,0], [0,1,1,0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,1,1,0,0,0,0,0,0,0,0]],
+            'J': [[0,1,1,1,1,0,0,0,0,0,0,0,0,0]],
+            'K': [[0,0,0,0,1,1,1,0,0,0,1,0,0,1], [0,0,0,0,1,1,0,0,0,0,1,0,0,1]],
+            'L': [[0,0,0,1,1,1,0,0,0,0,0,0,0,0]],
+            'M': [[0,1,1,0,1,1,0,0,1,0,1,0,0,0]],
+            'N': [[0,1,1,0,1,1,0,0,1,0,0,0,0,1], [0,0,1,0,1,0,1,1,0,0,0,0,0,0]],
+            'O': [[1,1,1,1,1,1,0,0,0,0,0,0,0,0], [0,0,1,1,1,0,1,1,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,1,0,1,1,0,1]],
+            'P': [[1,1,0,0,1,1,1,1,0,0,0,0,0,0]],
+            'Q': [[1,1,1,1,1,1,0,0,0,0,0,0,0,1]],
+            'R': [[1,1,0,0,1,1,1,1,0,0,0,0,0,1], [0,0,0,0,1,0,1,0,0,0,0,0,0,0]],
+            'S': [[1,0,1,1,0,1,1,1,0,0,0,0,0,0]],
+            'T': [[1,0,0,0,0,0,0,0,0,1,0,0,1,0]],
+            'U': [[0,1,1,1,1,1,0,0,0,0,0,0,0,0], [0,0,1,1,1,0,0,0,0,0,0,0,0,0]],
+            'V': [[0,1,0,0,0,1,0,0,0,0,0,1,0,1], [0,0,0,0,0,0,0,0,1,0,1,0,0,0], [0,0,0,0,0,1,0,0,0,0,1,0,0,0], [0,1,0,0,0,0,0,0,1,0,0,0,0,0], [0,0,0,0,1,1,0,0,0,0,1,0,0,0], [0,1,1,0,0,0,0,0,1,0,0,0,0,0]],
+            'W': [[0,1,1,0,1,1,0,0,0,0,0,1,0,1], [0,0,0,0,0,0,0,0,1,0,1,1,0,1]],
+            'X': [[0,0,0,0,0,0,0,0,1,0,1,1,0,1]],
+            'Y': [[0,0,0,0,0,0,0,0,1,0,1,0,1,0], [0,1,0,0,0,1,1,1,0,0,0,0,1,0]],
+            'Z': [[1,0,0,1,0,0,0,0,0,0,1,1,0,0]],
+            ' ': [[0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+        };
+
+        const VALID_STATE_MAP = {};
+        for (let char in MAPPING) {
+            MAPPING[char].forEach(arr => { VALID_STATE_MAP[arr.join(',')] = char; });
+        }
+
+        const SEGMENT_LINES = [
+            {x1:15, y1:10, x2:85, y2:10}, {x1:90, y1:15, x2:90, y2:65}, {x1:90, y1:75, x2:90, y2:125},
+            {x1:15, y1:130, x2:85, y2:130}, {x1:10, y1:75, x2:10, y2:125}, {x1:10, y1:15, x2:10, y2:65},
+            {x1:15, y1:70, x2:45, y2:70}, {x1:55, y1:70, x2:85, y2:70}, {x1:15, y1:15, x2:45, y2:65},
+            {x1:50, y1:15, x2:50, y2:65}, {x1:85, y1:15, x2:55, y2:65}, {x1:15, y1:125, x2:45, y2:75},
+            {x1:50, y1:125, x2:50, y2:75}, {x1:85, y1:125, x2:55, y2:75}
+        ];
+
+        const EMOJI_NUMS = ['0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣'];
+        function getEmojiNum(n) {
+            if (n === 10) return '🔟';
+            return String(n).split('').map(d => EMOJI_NUMS[parseInt(d)]).join('');
+        }
+
+        function checkGameState() {
+            let lastDate = localStorage.getItem('carver_last_date');
+            let defaultState = dailyWord.split('').map(c => [...(MAPPING[c][0] || MAPPING[' '][0])]);
+            startingState = defaultState.map(arr => [...arr]); 
+            
+            if (lastDate === todayDateStr) {
+                let savedBoard = JSON.parse(localStorage.getItem('carver_board_state'));
+                currentState = savedBoard || defaultState.map(arr => [...arr]);
+                
+                globalScore = parseInt(localStorage.getItem('carver_daily_score')) || 0;
+                
+                let savedCombos = JSON.parse(localStorage.getItem('carver_used_combos'));
+                if (savedCombos) usedWordsThisSession = savedCombos;
+                
+                let savedIndiv = JSON.parse(localStorage.getItem('carver_used_individual_words'));
+                if (savedIndiv) usedIndividualWords = new Set(savedIndiv);
+
+                let savedCarves = JSON.parse(localStorage.getItem('carver_record'));
+                if (savedCarves) carvesRecord = savedCarves;
+                
+                usedWordsThisSession.forEach(c => {
+                    let html = `<div class="gallery-item"><div class="gallery-info"><h3>${c}</h3></div></div>`;
+                    document.getElementById('gallery-container').insertAdjacentHTML('beforeend', html);
+                });
+                
+            } else {
+                currentState = defaultState.map(arr => [...arr]);
+                globalScore = 0;
+                usedWordsThisSession = [];
+                usedIndividualWords.clear();
+                carvesRecord = [];
+                
+                localStorage.setItem('carver_last_date', todayDateStr);
+                localStorage.setItem('carver_daily_score', globalScore);
+                localStorage.setItem('carver_used_combos', JSON.stringify([]));
+                localStorage.setItem('carver_used_individual_words', JSON.stringify([]));
+                localStorage.setItem('carver_record', JSON.stringify([]));
+                localStorage.setItem('carver_board_state', JSON.stringify(currentState));
+            }
+            
+            editsMade = 0;
+            for(let i=0; i<currentState.length; i++) {
+                for(let j=0; j<14; j++) {
+                    if (currentState[i][j] !== startingState[i][j]) editsMade++;
+                }
+            }
+
+            if (usedWordsThisSession.length >= MAX_COMBOS) {
+                isGameLocked = true;
+            }
+
+            document.getElementById('global-score').innerText = globalScore;
+            document.getElementById('combos-count').innerText = `${usedWordsThisSession.length}/${MAX_COMBOS}`;
+            renderMainWord();
+            updateStats();
+        }
+
+        function getLetterChar(stateArr) { return VALID_STATE_MAP[stateArr.join(',')] || '?'; }
+
+        function toggleSegment(letterIdx, segIdx) {
+            if (isGameLocked) return;
+
+            let isCurrentlyEdited = currentState[letterIdx][segIdx] !== startingState[letterIdx][segIdx];
+            
+            if (!isCurrentlyEdited && editsMade >= MAX_EDITS) {
+                let el = document.getElementById('edits-left');
+                el.classList.add('danger');
+                setTimeout(() => el.classList.remove('danger'), 300);
+                return;
+            }
+
+            currentState[letterIdx][segIdx] ^= 1;
+            
+            editsMade = 0;
+            for(let i=0; i<currentState.length; i++) {
+                for(let j=0; j<14; j++) {
+                    if (currentState[i][j] !== startingState[i][j]) editsMade++;
+                }
+            }
+            
+            renderMainWord();
+            updateStats();
+        }
+
+        function resetBoard() {
+            if (isGameLocked) return;
+            currentState = startingState.map(arr => [...arr]);
+            editsMade = 0;
+            renderMainWord();
+            updateStats();
+        }
+
+        function getSVGHTML(stateArr, letterIdx, interactive) {
+            let char = getLetterChar(stateArr);
+            let isInvalid = (char === '?');
+            let svg = `<svg viewBox="0 0 100 140" class="letter ${interactive && !isGameLocked ? 'interactive' : ''}">`;
+            for(let i=0; i<14; i++) {
+                let isOn = stateArr[i];
+                let classStr = isOn ? (isInvalid ? 'seg-invalid' : 'seg-on') : 'seg-off';
+                let onclick = interactive && !isGameLocked ? `onclick="toggleSegment(${letterIdx}, ${i})"` : '';
+                svg += `<line x1="${SEGMENT_LINES[i].x1}" y1="${SEGMENT_LINES[i].y1}" x2="${SEGMENT_LINES[i].x2}" y2="${SEGMENT_LINES[i].y2}" stroke-width="10" stroke-linecap="round" class="${classStr}" ${onclick}></line>`;
+            }
+            svg += `</svg>`;
+            return svg;
+        }
+
+        function renderMainWord() {
+            document.getElementById('main-word').innerHTML = currentState.map((state, i) => getSVGHTML(state, i, true)).join('');
+        }
+
+        function updateStats() {
+            if (isGameLocked) {
+                document.getElementById('current-valid-word').innerText = "Max combos reached for today!";
+                document.getElementById('current-valid-word').style.color = "#ffaa00";
+                document.getElementById('submit-btn').disabled = true;
+                document.getElementById('edits-left').innerText = 0;
+                return;
+            }
+
+            let currentChars = currentState.map(getLetterChar);
+            document.getElementById('parsed-reading').innerHTML = currentChars.map(c => c === ' ' ? '&nbsp;' : (c === '?' ? '<span class="invalid">?</span>' : c)).join('');
+
+            let words = currentChars.join('').split(/ +/).filter(w => w.length > 0);
+            bestValidWordsArr = [];
+            moveBaseScore = 0;
+            canSubmit = false;
+
+            for (let w of words) {
+                if (w.includes('?')) {
+                    bestValidWordsArr = [];
+                    break;
+                }
+                if (dictionary.size === 0 || dictionary.has(w.toUpperCase())) {
+                    bestValidWordsArr.push(w.toUpperCase());
+                    moveBaseScore += (w.length * w.length * 10);
+                } else {
+                    bestValidWordsArr = [];
+                    break;
+                }
+            }
+
+            let editsLeft = MAX_EDITS - editsMade;
+            document.getElementById('edits-left').innerText = editsLeft;
+
+            let multiplier = 1 + (editsLeft / MAX_EDITS);
+            let projScore = Math.floor(moveBaseScore * multiplier);
+            document.getElementById('proj-score').innerText = projScore;
+            
+            let wordDisplay = document.getElementById('current-valid-word');
+            
+            if (editsMade === 0) {
+                wordDisplay.innerText = "Carve to begin...";
+                wordDisplay.style.color = "#888";
+                canSubmit = false;
+            } else if (bestValidWordsArr.length > 0) {
+                let reusedWord = bestValidWordsArr.find(w => usedIndividualWords.has(w));
+                
+                if (reusedWord) {
+                    wordDisplay.innerText = `'${reusedWord}' already used today!`;
+                    wordDisplay.style.color = "#ffaa00";
+                    canSubmit = false;
+                } else {
+                    wordDisplay.innerText = bestValidWordsArr.join(' + ');
+                    wordDisplay.style.color = "#00ffcc";
+                    canSubmit = true;
+                }
+            } else {
+                wordDisplay.innerText = "Invalid Word(s)";
+                wordDisplay.style.color = "#ff3366";
+                canSubmit = false;
+            }
+
+            document.getElementById('submit-btn').disabled = !canSubmit;
+        }
+
+        function saveCombo() {
+            if (!canSubmit || editsMade === 0 || isGameLocked) return;
+            
+            let comboStr = bestValidWordsArr.join(' + ');
+            
+            let editsLeft = MAX_EDITS - editsMade;
+            let multiplier = 1 + (editsLeft / MAX_EDITS);
+            let finalScore = Math.floor(moveBaseScore * multiplier);
+            
+            // Add to running totals
+            globalScore += finalScore;
+            usedWordsThisSession.push(comboStr);
+            
+            // Mark individual words as used
+            bestValidWordsArr.forEach(w => usedIndividualWords.add(w));
+            
+            // Record carve signature
+            let carvesPerLetter = [];
+            for (let i = 0; i < currentState.length; i++) {
+                let diff = 0;
+                for (let j = 0; j < 14; j++) {
+                    if (currentState[i][j] !== startingState[i][j]) diff++;
+                }
+                carvesPerLetter.push(diff);
+            }
+            carvesRecord.push(carvesPerLetter.map(getEmojiNum).join(''));
+            
+            // Update Local Storage
+            localStorage.setItem('carver_daily_score', globalScore);
+            localStorage.setItem('carver_used_combos', JSON.stringify(usedWordsThisSession));
+            localStorage.setItem('carver_used_individual_words', JSON.stringify([...usedIndividualWords]));
+            localStorage.setItem('carver_record', JSON.stringify(carvesRecord));
+            localStorage.setItem('carver_board_state', JSON.stringify(currentState));
+            
+            // Update UI
+            document.getElementById('global-score').innerText = globalScore;
+            document.getElementById('combos-count').innerText = `${usedWordsThisSession.length}/${MAX_COMBOS}`;
+            
+            // Add to gallery
+            let html = `<div class="gallery-item">
+                <div class="gallery-svgs">${currentState.map(state => getSVGHTML(state, 0, false)).join('')}</div>
+                <div class="gallery-info">
+                    <h3>${comboStr}</h3>
+                    <p>Points: +${finalScore} (Total Edits: ${editsMade})</p>
+                </div>
+            </div>`;
+            document.getElementById('gallery-container').insertAdjacentHTML('afterbegin', html);
+            
+            if (usedWordsThisSession.length >= MAX_COMBOS) {
+                isGameLocked = true;
+                alert("You've found all 5 combos for today! Share your results.");
+            }
+
+            updateStats();
+            renderMainWord(); // re-render to apply lock if necessary
+        }
+
+        function shareScore() {
+            let text = `Daily Carver #${daysPassed} 🗓️
+`;
+            text += `Total Score: ${globalScore} 🏆
+`;
+            text += `Combos Found: ${usedWordsThisSession.length}/${MAX_COMBOS} ✨
+
+`;
+            text += `${dailyWord}
+`;
+            
+            carvesRecord.forEach(record => {
+                text += `${record}
+`;
+            });
+            
+            text += `
+Play at: yourwebsite.com`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Copied to clipboard! Share it with your friends.");
+            }).catch(err => {
+                prompt("Copy this text to share:", text);
+            });
+        }
+
+        function devReset() {
+            if (confirm("Reset local storage and clear today's progress?")) {
+                localStorage.removeItem('carver_last_date');
+                localStorage.removeItem('carver_daily_score');
+                localStorage.removeItem('carver_used_combos');
+                localStorage.removeItem('carver_used_individual_words');
+                localStorage.removeItem('carver_record');
+                localStorage.removeItem('carver_board_state');
+                location.reload();
+            }
+        }
+
+        window.onload = () => loadDictionary();
+    </script>
+</body>
+</html>
