@@ -2,83 +2,176 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Carver: 5 Combos Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEOCARVE</title>
     <style>
-        :root { --bg: #0f0f13; --panel: #1a1a24; --text: #e0e0e0; --accent: #00ffcc; --danger: #ff3366; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; text-align: center; }
-        h1 { color: var(--accent); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
-        p { color: #888; margin-top: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        :root { 
+            --bg: #020804; 
+            --panel: #051409; 
+            --text: #d4d4d8; 
+            --accent: #00ff41; 
+            --accent-glow: rgba(0, 255, 65, 0.4);
+            --danger: #ff3366; 
+            --danger-glow: rgba(255, 51, 102, 0.4);
+            --off-seg: #0a1f10;
+        }
         
-        .header-panel { background: var(--panel); border: 1px solid #333; border-radius: 10px; padding: 15px; max-width: 600px; margin: 20px auto; display: flex; justify-content: space-around; align-items: center; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .header-panel div { display: flex; flex-direction: column; }
-        .header-panel span { font-weight: bold; color: var(--accent); font-size: 1.4rem; }
+        body { 
+            font-family: 'Share Tech Mono', monospace; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 10px; 
+            text-align: center; 
+            touch-action: manipulation;
+        }
+
+        h1 { 
+            color: var(--accent); 
+            margin: 10px 0 5px 0; 
+            text-transform: uppercase; 
+            letter-spacing: 4px; 
+            font-size: 2.5rem;
+            text-shadow: 0 0 15px var(--accent-glow);
+        }
+        p { color: #71717a; margin-top: 0; font-size: 0.9rem; }
+        
+        .header-panel { 
+            background: var(--panel); 
+            border: 1px solid #143d20; 
+            border-radius: 8px; 
+            padding: 10px; 
+            max-width: 600px; 
+            margin: 10px auto; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 0.85rem; 
+            box-shadow: 0 4px 10px rgba(0,255,65,0.05); 
+        }
+        .header-panel div { display: flex; flex-direction: column; width: 30%; }
+        .header-panel span { font-weight: bold; color: var(--accent); font-size: 1.4rem; margin-top: 2px;}
         .header-panel span.danger { color: var(--danger); }
         
-        .word-container { display: flex; flex-wrap: wrap; justify-content: center; margin: 30px auto; background: #111116; padding: 20px; border-radius: 12px; max-width: 800px; }
-        .letter { width: 65px; height: 90px; margin: 4px; display: inline-block; }
+        .word-container { 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            margin: 20px auto; 
+            background: #000; 
+            padding: 15px 5px; 
+            border-radius: 8px; 
+            border: 1px solid #0a1f10;
+            max-width: 100%; 
+        }
         
-        .interactive line { cursor: pointer; transition: all 0.1s ease; }
-        .interactive line:hover { stroke-width: 12; opacity: 0.8; }
-        .seg-on { stroke: var(--accent); filter: drop-shadow(0 0 3px var(--accent)); }
-        .seg-off { stroke: #22222a; }
-        .seg-invalid { stroke: var(--danger); filter: drop-shadow(0 0 3px var(--danger)); }
+        .letter { 
+            width: clamp(40px, 10vw, 65px); 
+            height: clamp(55px, 14vw, 90px); 
+            margin: 3px; 
+            display: inline-block; 
+        }
+        
+        .interactive line { 
+            cursor: pointer; 
+            transition: all 0.1s ease; 
+            stroke-width: 16; 
+            stroke-linecap: round;
+        }
+        .seg-on { stroke: var(--accent); filter: drop-shadow(0 0 4px var(--accent-glow)); }
+        .seg-off { stroke: var(--off-seg); }
+        .seg-invalid { stroke: var(--danger); filter: drop-shadow(0 0 4px var(--danger-glow)); }
 
-        .stats-box { margin: 15px auto; color: #aaa; font-size: 1.1rem; max-width: 600px; }
-        .parsed-text { font-size: 1.8rem; letter-spacing: 3px; color: #fff; margin: 10px 0; background: #222; padding: 15px; border-radius: 8px; min-height: 35px; display: flex; justify-content: center; align-items: center; }
+        .stats-box { margin: 15px auto; color: #a1a1aa; font-size: 1rem; max-width: 600px; }
+        .parsed-text { 
+            font-size: 1.5rem; 
+            letter-spacing: 3px; 
+            color: #fff; 
+            margin: 10px 0; 
+            background: var(--panel); 
+            padding: 10px; 
+            border-radius: 6px; 
+            min-height: 25px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            border: 1px dashed #143d20;
+        }
         .parsed-text span.invalid { color: var(--danger); }
         
-        .controls { margin: 20px 0; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-        button { padding: 15px 25px; border-radius: 8px; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
-        .btn-primary { background: var(--accent); color: #000; }
-        .btn-primary:hover { background: #00ccaa; transform: scale(1.05); }
-        .btn-primary:disabled { background: #555; cursor: not-allowed; transform: none; }
-        .btn-secondary { background: #444; color: #fff; }
-        .btn-secondary:hover { background: #555; }
-        .btn-share { background: #1da1f2; color: #fff; }
-        .btn-share:hover { background: #0c85d0; }
-        .btn-dev { background: #ffaa00; color: #000; font-size: 0.8rem; padding: 10px 15px; }
+        .controls { margin: 15px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        button { 
+            padding: 12px 20px; 
+            border-radius: 6px; 
+            border: none; 
+            font-size: 1rem; 
+            font-family: inherit;
+            font-weight: bold; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            width: 100%;
+            max-width: 250px;
+        }
+        .btn-primary { background: var(--accent); color: #000; box-shadow: 0 0 10px var(--accent-glow); }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { background: #143d20; color: #52525b; cursor: not-allowed; box-shadow: none; }
+        
+        .btn-secondary { background: transparent; color: #a1a1aa; border: 1px solid #143d20; }
+        .btn-secondary:active { background: #0a1f10; }
+        
+        .btn-share { background: #143d20; color: var(--accent); border: 1px solid var(--accent); }
+        .btn-dev { background: #051409; color: #143d20; font-size: 0.7rem; padding: 8px; border: 1px dashed #143d20; }
 
-        .banner { background-color: #ffaa00; color: #000; padding: 10px; font-weight: bold; border-radius: 5px; margin-bottom: 15px; display: inline-block; }
+        .banner { background-color: var(--accent); color: #000; padding: 8px; font-weight: bold; border-radius: 4px; margin-bottom: 10px; display: inline-block; font-size: 0.9rem;}
 
-        .gallery { max-width: 800px; margin: 40px auto; text-align: left; }
-        .gallery-item { background: var(--panel); padding: 15px; margin: 15px 0; border-radius: 8px; border-left: 5px solid var(--accent); display: flex; align-items: center; justify-content: space-between; }
-        .gallery-svgs { display: flex; }
-        .gallery-svgs .letter { width: 35px; height: 49px; margin: 2px; }
-        .gallery-info { text-align: right; min-width: 200px; }
-        .gallery-info h3 { margin: 0 0 5px 0; color: #fff; text-transform: uppercase; }
-        .gallery-info p { margin: 0; font-size: 0.9rem; color: #aaa; }
+        .gallery { max-width: 600px; margin: 30px auto; text-align: left; }
+        .gallery-item { background: var(--panel); padding: 12px; margin: 10px 0; border-radius: 6px; border-left: 4px solid var(--accent); display: flex; align-items: center; justify-content: space-between; }
+        .gallery-svgs { display: flex; flex-wrap: wrap;}
+        .gallery-svgs .letter { width: 25px; height: 35px; margin: 1px; stroke-width: 12;}
+        .gallery-info { text-align: right; min-width: 100px; }
+        .gallery-info h3 { margin: 0 0 2px 0; color: #fff; font-size: 1.1rem; }
+        .gallery-info p { margin: 0; font-size: 0.8rem; color: #a1a1aa; }
+        
+        @media (min-width: 600px) {
+            button { width: auto; }
+        }
+        
+        .dev-controls { margin-top: 40px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
     </style>
 </head>
 <body>
 
-    <h1>Daily Carver</h1>
+    <h1>NEOCARVE</h1>
     <p id="date-display">Loading...</p>
     
-    <div id="banner" class="banner">Loading Dictionary... Please wait.</div>
+    <div id="banner" class="banner">SYS: LOADING DICTIONARY...</div>
 
     <div class="header-panel">
-        <div>Combos Found <span id="combos-count">0/5</span></div>
-        <div>Carves Left <span id="edits-left">10</span></div>
-        <div>Total Score <span id="global-score">0</span></div>
+        <div>COMBOS <span id="combos-count">0/5</span></div>
+        <div>CARVES <span id="edits-left">12</span></div>
+        <div>SCORE <span id="global-score">0</span></div>
     </div>
 
     <div class="word-container" id="main-word"></div>
 
     <div class="stats-box">
         <div class="parsed-text" id="parsed-reading">-</div>
-        Words Found: <strong id="current-valid-word" style="color: #fff;">None</strong> | 
-        Projected Score: <strong id="proj-score" style="color: var(--accent);">0</strong>
+        Target: <strong id="current-valid-word" style="color: #fff;">None</strong><br>
+        Yield: <strong id="proj-score" style="color: var(--accent);">0</strong>
     </div>
 
     <div class="controls">
-        <button class="btn-secondary" onclick="resetBoard()">Reset to Base Word</button>
-        <button class="btn-primary" id="submit-btn" onclick="saveCombo()" disabled>Bank Combo</button>
-        <button class="btn-share" onclick="shareScore()">Share Today's Result 🔗</button>
+        <button class="btn-primary" id="submit-btn" onclick="saveCombo()" disabled>Execute Bank</button>
+        <button class="btn-secondary" onclick="resetBoard()">Abort Move (Reset)</button>
+        <button class="btn-share" onclick="shareScore()">Export Log 🔗</button>
     </div>
     
-    <div class="controls" style="margin-top: 50px; border-top: 1px solid #333; padding-top: 20px;">
-        <button class="btn-dev" onclick="devReset()">[DEV] Reset Local Storage</button>
+    <div class="dev-controls">
+        <button class="btn-dev" onclick="devTimeTravel()">[DEV] TIME TRAVEL</button>
+        <button class="btn-dev" onclick="devReset()">[DEV] WIPE MEMORY</button>
     </div>
 
     <div class="gallery" id="gallery-container"></div>
@@ -93,13 +186,22 @@
             'STRAWBERRY', 'WATERMELON', 'WONDERFUL', 'YESTERDAY', 'ZEPPELIN'
         ];
         
-        let todayDateStr = new Date().toDateString();
-        let daysPassed = Math.floor((new Date().getTime() - START_DATE) / (1000 * 60 * 60 * 24));
+        let realDaysPassed = Math.floor((new Date().getTime() - START_DATE) / (1000 * 60 * 60 * 24));
+        let daysPassed = localStorage.getItem('carver_dev_day') !== null ? parseInt(localStorage.getItem('carver_dev_day')) : realDaysPassed;
+        
+        // Prevent traveling into the future
+        if (daysPassed > realDaysPassed) {
+            daysPassed = realDaysPassed;
+            localStorage.removeItem('carver_dev_day');
+        }
+        
+        // Use Sector ID as the unique day string so time travel resets the board cleanly
+        let todayDateStr = `Sector_${daysPassed}`;
         let dailyWord = DAILY_WORDS[daysPassed % DAILY_WORDS.length];
 
-        document.getElementById('date-display').innerText = `Daily Challenge #${daysPassed} - Base Word: ${dailyWord}`;
+        document.getElementById('date-display').innerText = `SECTOR #${daysPassed} // BASE: ${dailyWord}`;
 
-        const MAX_EDITS = 10;
+        const MAX_EDITS = 12;
         const MAX_COMBOS = 5;
         let dictionary = new Set();
         let isDictLoaded = false;
@@ -109,9 +211,9 @@
         let editsMade = 0; 
         
         let globalScore = 0;
-        let usedWordsThisSession = []; // To store the combo strings for the gallery
-        let usedIndividualWords = new Set(); // To prevent reusing the same sub-word
-        let carvesRecord = []; // Store the carve signatures for sharing
+        let usedWordsThisSession = []; 
+        let usedIndividualWords = new Set(); 
+        let carvesRecord = []; 
         
         let moveBaseScore = 0;
         let bestValidWordsArr = [];
@@ -129,37 +231,37 @@
                 isDictLoaded = true;
                 document.getElementById('banner').style.display = 'none';
             } catch (e) {
-                document.getElementById('banner').innerText = "Offline Mode: Dictionary unreachable. Validating all non-red letters.";
-                document.getElementById('banner').style.backgroundColor = "#555";
-                document.getElementById('banner').style.color = "#fff";
+                document.getElementById('banner').innerText = "SYS: OFFLINE. VALIDATING ALL NON-RED SHAPES.";
+                document.getElementById('banner').style.backgroundColor = "#143d20";
+                document.getElementById('banner').style.color = "#00ff41";
             }
             checkGameState();
         }
 
         const MAPPING = {
             'A': [[1,1,1,0,1,1,1,1,0,0,0,0,0,0], [1,1,1,1,1,1,1,1,0,0,0,0,0,0]],
-            'B': [[1,1,1,1,0,0,1,1,0,1,0,0,1,0], [0,0,1,1,1,1,1,1,0,0,0,0,0,0]],
-            'C': [[1,0,0,1,1,1,0,0,0,0,0,0,0,0], [0,0,0,1,1,0,1,0,0,0,0,0,0,0]],
-            'D': [[1,1,1,1,0,0,0,0,0,1,0,0,1,0], [0,1,1,1,1,0,1,1,0,0,0,0,0,0]],
+            'B': [[1,1,1,1,0,0,1,1,0,1,0,0,1,0], [0,0,1,1,1,1,1,1,0,0,0,0,0,0], [0,0,1,1,1,1,1,0,0,0,0,0,0,0]], 
+            'C': [[1,0,0,1,1,1,0,0,0,0,0,0,0,0], [0,0,0,1,1,0,1,0,0,0,0,0,0,0], [0,0,0,1,1,0,0,0,0,0,0,0,0,0]], 
+            'D': [[1,1,1,1,0,0,0,0,0,1,0,0,1,0], [0,1,1,1,1,0,1,1,0,0,0,0,0,0], [0,1,1,1,1,0,1,0,0,0,0,0,0,0]], 
             'E': [[1,0,0,1,1,1,1,1,0,0,0,0,0,0], [1,1,0,1,1,1,1,1,0,0,0,0,0,0]],
             'F': [[1,0,0,0,1,1,1,0,0,0,0,0,0,0]],
             'G': [[1,0,1,1,1,1,0,1,0,0,0,0,0,0]],
-            'H': [[0,1,1,0,1,1,1,1,0,0,0,0,0,0], [0,0,1,0,1,1,1,1,0,0,0,0,0,0]],
-            'I': [[1,0,0,1,0,0,0,0,0,1,0,0,1,0], [0,0,0,0,0,0,0,0,0,1,0,0,1,0], [0,1,1,0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,1,1,0,0,0,0,0,0,0,0]],
+            'H': [[0,1,1,0,1,1,1,1,0,0,0,0,0,0], [0,0,1,0,1,1,1,1,0,0,0,0,0,0], [0,0,1,0,1,0,1,0,0,0,0,0,0,0]], 
+            'I': [[1,0,0,1,0,0,0,0,0,1,0,0,1,0], [0,0,0,0,0,0,0,0,0,1,0,0,1,0], [0,1,1,0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,1,1,0,0,0,0,0,0,0,0], [0,0,1,0,0,0,0,0,0,0,0,0,0,0]], 
             'J': [[0,1,1,1,1,0,0,0,0,0,0,0,0,0]],
             'K': [[0,0,0,0,1,1,1,0,0,0,1,0,0,1], [0,0,0,0,1,1,0,0,0,0,1,0,0,1]],
-            'L': [[0,0,0,1,1,1,0,0,0,0,0,0,0,0]],
+            'L': [[0,0,0,1,1,1,0,0,0,0,0,0,0,0], [0,0,0,1,0,1,0,0,0,0,0,0,0,0]], 
             'M': [[0,1,1,0,1,1,0,0,1,0,1,0,0,0]],
-            'N': [[0,1,1,0,1,1,0,0,1,0,0,0,0,1], [0,0,1,0,1,0,1,1,0,0,0,0,0,0]],
-            'O': [[1,1,1,1,1,1,0,0,0,0,0,0,0,0], [0,0,1,1,1,0,1,1,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,1,0,1,1,0,1]],
+            'N': [[0,1,1,0,1,1,0,0,1,0,0,0,0,1], [0,0,1,0,1,0,1,1,0,0,0,0,0,0], [0,0,1,0,1,0,1,0,0,0,0,0,0,0]], 
+            'O': [[1,1,1,1,1,1,0,0,0,0,0,0,0,0], [0,0,1,1,1,0,1,1,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,1,0,1,1,0,1], [0,0,1,1,1,0,1,0,0,0,0,0,0,0]], 
             'P': [[1,1,0,0,1,1,1,1,0,0,0,0,0,0]],
             'Q': [[1,1,1,1,1,1,0,0,0,0,0,0,0,1]],
-            'R': [[1,1,0,0,1,1,1,1,0,0,0,0,0,1], [0,0,0,0,1,0,1,0,0,0,0,0,0,0]],
+            'R': [[1,1,0,0,1,1,1,1,0,0,0,0,0,1], [0,0,0,0,1,0,1,0,0,0,0,0,0,0]], 
             'S': [[1,0,1,1,0,1,1,1,0,0,0,0,0,0]],
-            'T': [[1,0,0,0,0,0,0,0,0,1,0,0,1,0]],
-            'U': [[0,1,1,1,1,1,0,0,0,0,0,0,0,0], [0,0,1,1,1,0,0,0,0,0,0,0,0,0]],
-            'V': [[0,1,0,0,0,1,0,0,0,0,0,1,0,1], [0,0,0,0,0,0,0,0,1,0,1,0,0,0], [0,0,0,0,0,1,0,0,0,0,1,0,0,0], [0,1,0,0,0,0,0,0,1,0,0,0,0,0], [0,0,0,0,1,1,0,0,0,0,1,0,0,0], [0,1,1,0,0,0,0,0,1,0,0,0,0,0]],
-            'W': [[0,1,1,0,1,1,0,0,0,0,0,1,0,1], [0,0,0,0,0,0,0,0,1,0,1,1,0,1]],
+            'T': [[1,0,0,0,0,0,0,0,0,1,0,0,1,0], [0,0,0,1,1,1,1,1,0,0,0,0,0,0]], 
+            'U': [[0,1,1,1,1,1,0,0,0,0,0,0,0,0], [0,0,1,1,1,0,0,0,0,0,0,0,0,0]], 
+            'V': [[0,1,0,0,0,1,0,0,0,0,0,1,0,1], [0,0,0,0,0,0,0,0,1,0,1,0,0,0], [0,0,0,0,0,1,0,0,0,0,1,0,0,0], [0,1,0,0,0,0,0,0,1,0,0,0,0,0], [0,0,0,0,1,1,0,0,0,0,1,0,0,0], [0,1,1,0,0,0,0,0,1,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0,1,0,1]], 
+            'W': [[0,1,1,0,1,1,0,0,0,0,0,1,0,1], [0,0,0,0,0,0,0,0,1,0,1,1,0,1], [0,0,0,1,0,0,0,0,0,0,0,1,0,1]], 
             'X': [[0,0,0,0,0,0,0,0,1,0,1,1,0,1]],
             'Y': [[0,0,0,0,0,0,0,0,1,0,1,0,1,0], [0,1,0,0,0,1,1,1,0,0,0,0,1,0]],
             'Z': [[1,0,0,1,0,0,0,0,0,0,1,1,0,0]],
@@ -181,8 +283,8 @@
 
         const EMOJI_NUMS = ['0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣'];
         function getEmojiNum(n) {
-            if (n === 10) return '🔟';
-            return String(n).split('').map(d => EMOJI_NUMS[parseInt(d)]).join('');
+            if (n >= 10) return '🔟';
+            return EMOJI_NUMS[n];
         }
 
         function checkGameState() {
@@ -284,8 +386,13 @@
             for(let i=0; i<14; i++) {
                 let isOn = stateArr[i];
                 let classStr = isOn ? (isInvalid ? 'seg-invalid' : 'seg-on') : 'seg-off';
-                let onclick = interactive && !isGameLocked ? `onclick="toggleSegment(${letterIdx}, ${i})"` : '';
-                svg += `<line x1="${SEGMENT_LINES[i].x1}" y1="${SEGMENT_LINES[i].y1}" x2="${SEGMENT_LINES[i].x2}" y2="${SEGMENT_LINES[i].y2}" stroke-width="10" stroke-linecap="round" class="${classStr}" ${onclick}></line>`;
+                let events = interactive && !isGameLocked ? `onpointerdown="toggleSegment(${letterIdx}, ${i})"` : '';
+                
+                svg += `<line x1="${SEGMENT_LINES[i].x1}" y1="${SEGMENT_LINES[i].y1}" x2="${SEGMENT_LINES[i].x2}" y2="${SEGMENT_LINES[i].y2}" class="${classStr}"></line>`;
+                
+                if (interactive && !isGameLocked) {
+                    svg += `<line x1="${SEGMENT_LINES[i].x1}" y1="${SEGMENT_LINES[i].y1}" x2="${SEGMENT_LINES[i].x2}" y2="${SEGMENT_LINES[i].y2}" stroke="transparent" stroke-width="25" style="cursor:pointer;" ${events}></line>`;
+                }
             }
             svg += `</svg>`;
             return svg;
@@ -297,8 +404,8 @@
 
         function updateStats() {
             if (isGameLocked) {
-                document.getElementById('current-valid-word').innerText = "Max combos reached for today!";
-                document.getElementById('current-valid-word').style.color = "#ffaa00";
+                document.getElementById('current-valid-word').innerText = "SECTOR COMPLETE.";
+                document.getElementById('current-valid-word').style.color = "var(--accent)";
                 document.getElementById('submit-btn').disabled = true;
                 document.getElementById('edits-left').innerText = 0;
                 return;
@@ -336,24 +443,24 @@
             let wordDisplay = document.getElementById('current-valid-word');
             
             if (editsMade === 0) {
-                wordDisplay.innerText = "Carve to begin...";
-                wordDisplay.style.color = "#888";
+                wordDisplay.innerText = "AWAITING INPUT...";
+                wordDisplay.style.color = "#71717a";
                 canSubmit = false;
             } else if (bestValidWordsArr.length > 0) {
                 let reusedWord = bestValidWordsArr.find(w => usedIndividualWords.has(w));
                 
                 if (reusedWord) {
-                    wordDisplay.innerText = `'${reusedWord}' already used today!`;
-                    wordDisplay.style.color = "#ffaa00";
+                    wordDisplay.innerText = `ERR: '${reusedWord}' DUPLICATE`;
+                    wordDisplay.style.color = "var(--danger)";
                     canSubmit = false;
                 } else {
                     wordDisplay.innerText = bestValidWordsArr.join(' + ');
-                    wordDisplay.style.color = "#00ffcc";
+                    wordDisplay.style.color = "var(--accent)";
                     canSubmit = true;
                 }
             } else {
-                wordDisplay.innerText = "Invalid Word(s)";
-                wordDisplay.style.color = "#ff3366";
+                wordDisplay.innerText = "ERR: INVALID SYNTAX";
+                wordDisplay.style.color = "var(--danger)";
                 canSubmit = false;
             }
 
@@ -364,19 +471,14 @@
             if (!canSubmit || editsMade === 0 || isGameLocked) return;
             
             let comboStr = bestValidWordsArr.join(' + ');
-            
             let editsLeft = MAX_EDITS - editsMade;
             let multiplier = 1 + (editsLeft / MAX_EDITS);
             let finalScore = Math.floor(moveBaseScore * multiplier);
             
-            // Add to running totals
             globalScore += finalScore;
             usedWordsThisSession.push(comboStr);
-            
-            // Mark individual words as used
             bestValidWordsArr.forEach(w => usedIndividualWords.add(w));
             
-            // Record carve signature
             let carvesPerLetter = [];
             for (let i = 0; i < currentState.length; i++) {
                 let diff = 0;
@@ -387,42 +489,44 @@
             }
             carvesRecord.push(carvesPerLetter.map(getEmojiNum).join(''));
             
-            // Update Local Storage
+            // Build gallery item before resetting board state
+            let html = `<div class="gallery-item">
+                <div class="gallery-svgs">${currentState.map(state => getSVGHTML(state, 0, false)).join('')}</div>
+                <div class="gallery-info">
+                    <h3>${comboStr}</h3>
+                    <p>+${finalScore} PTS (Cost: ${editsMade})</p>
+                </div>
+            </div>`;
+            document.getElementById('gallery-container').insertAdjacentHTML('afterbegin', html);
+
+            // Reset board state back to the base word immediately
+            currentState = startingState.map(arr => [...arr]);
+            editsMade = 0;
+            
             localStorage.setItem('carver_daily_score', globalScore);
             localStorage.setItem('carver_used_combos', JSON.stringify(usedWordsThisSession));
             localStorage.setItem('carver_used_individual_words', JSON.stringify([...usedIndividualWords]));
             localStorage.setItem('carver_record', JSON.stringify(carvesRecord));
             localStorage.setItem('carver_board_state', JSON.stringify(currentState));
             
-            // Update UI
             document.getElementById('global-score').innerText = globalScore;
             document.getElementById('combos-count').innerText = `${usedWordsThisSession.length}/${MAX_COMBOS}`;
             
-            // Add to gallery
-            let html = `<div class="gallery-item">
-                <div class="gallery-svgs">${currentState.map(state => getSVGHTML(state, 0, false)).join('')}</div>
-                <div class="gallery-info">
-                    <h3>${comboStr}</h3>
-                    <p>Points: +${finalScore} (Total Edits: ${editsMade})</p>
-                </div>
-            </div>`;
-            document.getElementById('gallery-container').insertAdjacentHTML('afterbegin', html);
-            
             if (usedWordsThisSession.length >= MAX_COMBOS) {
                 isGameLocked = true;
-                alert("You've found all 5 combos for today! Share your results.");
+                alert("ALL 5 SECTORS COMPLETE. EXPORT YOUR LOG.");
             }
 
             updateStats();
-            renderMainWord(); // re-render to apply lock if necessary
+            renderMainWord(); 
         }
 
         function shareScore() {
-            let text = `Daily Carver #${daysPassed} 🗓️
+            let text = `NEOCARVE Sector #${daysPassed} 🪚
 `;
             text += `Total Score: ${globalScore} 🏆
 `;
-            text += `Combos Found: ${usedWordsThisSession.length}/${MAX_COMBOS} ✨
+            text += `Combos Executed: ${usedWordsThisSession.length}/${MAX_COMBOS} ✨
 
 `;
             text += `${dailyWord}
@@ -433,23 +537,56 @@
 `;
             });
             
-            text += `Play at: lachlanmcfarlane-a11y.github.io/word_carver`;
+            text += `
+Play at: lachlanmcfarlane-a11y.github.io/word_carver`;
 
             navigator.clipboard.writeText(text).then(() => {
-                alert("Copied to clipboard! Share it with your friends.");
+                alert("Log copied to clipboard. Ready to transmit.");
             }).catch(err => {
                 prompt("Copy this text to share:", text);
             });
         }
+        
+        function devTimeTravel() {
+            let realDay = Math.floor((new Date().getTime() - START_DATE) / (1000 * 60 * 60 * 24));
+            let currentOverride = localStorage.getItem('carver_dev_day') !== null ? parseInt(localStorage.getItem('carver_dev_day')) : realDay;
+            
+            let targetDay = prompt(`SYS: REAL WORLD SECTOR IS ${realDay}.
+Enter a past sector number (0 to ${realDay}) to travel to:`, currentOverride);
+            
+            if (targetDay === null || targetDay === "") return;
+            targetDay = parseInt(targetDay);
+            
+            if (isNaN(targetDay) || targetDay < 0) {
+                alert("ERR: INVALID TEMPORAL COORDINATES.");
+                return;
+            }
+            if (targetDay > realDay) {
+                alert("ERR: TEMPORAL PARADOX DETECTED. FUTURE TRAVEL IS STRICTLY PROHIBITED.");
+                return;
+            }
+            
+            // Clear current memory context to prevent cross-contamination
+            localStorage.removeItem('carver_last_date');
+            localStorage.removeItem('carver_daily_score');
+            localStorage.removeItem('carver_used_combos');
+            localStorage.removeItem('carver_used_individual_words');
+            localStorage.removeItem('carver_record');
+            localStorage.removeItem('carver_board_state');
+            
+            localStorage.setItem('carver_dev_day', targetDay);
+            location.reload();
+        }
 
         function devReset() {
-            if (confirm("Reset local storage and clear today's progress?")) {
+            if (confirm("Wipe local memory for testing?")) {
                 localStorage.removeItem('carver_last_date');
                 localStorage.removeItem('carver_daily_score');
                 localStorage.removeItem('carver_used_combos');
                 localStorage.removeItem('carver_used_individual_words');
                 localStorage.removeItem('carver_record');
                 localStorage.removeItem('carver_board_state');
+                localStorage.removeItem('carver_dev_day');
                 location.reload();
             }
         }
