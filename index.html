@@ -203,7 +203,6 @@
 </head>
 <body>
 
-    
     <div class="top-bar">
         <h1>NEOCARVE</h1>
         <div class="help-container">
@@ -309,13 +308,13 @@
         }
 
         const MAPPING = {
-            'A': [[1,1,1,0,1,1,1,1,0,0,0,0,0,0]],
+            'A': [[1,1,1,0,1,1,1,1,0,0,0,0,0,0], [1,1,1,1,1,0,1,1,0,0,0,0,0,0]],
             'B': [[1,1,1,1,0,0,1,1,0,1,0,0,1,0], [0,0,1,1,1,1,1,1,0,0,0,0,0,0], [0,0,1,1,1,1,1,0,0,0,0,0,0,0]], 
             'C': [[1,0,0,1,1,1,0,0,0,0,0,0,0,0], [0,0,0,1,1,0,1,0,0,0,0,0,0,0]], 
             'D': [[1,1,1,1,0,0,0,0,0,1,0,0,1,0], [0,1,1,1,1,0,1,1,0,0,0,0,0,0], [0,1,1,1,1,0,1,0,0,0,0,0,0,0]], 
-            'E': [[1,0,0,1,1,1,1,1,0,0,0,0,0,0]],
+            'E': [[1,0,0,1,1,1,1,1,0,0,0,0,0,0], [1,0,0,1,1,1,1,0,0,0,0,0,0,0]],
             'F': [[1,0,0,0,1,1,1,0,0,0,0,0,0,0]],
-            'G': [[1,0,1,1,1,1,0,1,0,0,0,0,0,0]],
+            'G': [[1,0,1,1,1,1,0,1,0,0,0,0,0,0], [1,1,1,1,0,1,1,1,0,0,0,0,0,0]],
             'H': [[0,1,1,0,1,1,1,1,0,0,0,0,0,0], [0,0,1,0,1,1,1,1,0,0,0,0,0,0]], 
             'I': [[1,0,0,1,0,0,0,0,0,1,0,0,1,0], [0,0,0,0,0,0,0,0,0,1,0,0,1,0], [0,1,1,0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,1,1,0,0,0,0,0,0,0,0], [0,0,1,0,0,0,0,0,0,0,0,0,0,0]], 
             'J': [[0,1,1,1,1,0,0,0,0,0,0,0,0,0]],
@@ -328,7 +327,7 @@
             'Q': [[1,1,1,1,1,1,0,0,0,0,0,0,0,1]],
             'R': [[1,1,0,0,1,1,1,1,0,0,0,0,0,1], [0,0,0,0,1,0,1,0,0,0,0,0,0,0]], 
             'S': [[1,0,1,1,0,1,1,1,0,0,0,0,0,0], [1,0,0,0,0,0,1,0,1,0,0,0,0,0], [0,0,0,1,0,0,0,1,0,0,0,0,0,1]],
-            'T': [[1,0,0,0,0,0,0,0,0,1,0,0,1,0], [0,0,0,1,1,1,1,1,0,0,0,0,0,0]], 
+            'T': [[1,0,0,0,0,0,0,0,0,1,0,0,1,0], [0,0,0,1,1,1,1,1,0,0,0,0,0,0], [1,0,0,0,0,0,0,0,0,1,0,0,0,0]], 
             'U': [[0,1,1,1,1,1,0,0,0,0,0,0,0,0], [0,0,1,1,1,0,0,0,0,0,0,0,0,0]], 
             'V': [[0,1,0,0,0,1,0,0,0,0,0,1,0,1], [0,0,0,0,0,0,0,0,1,0,1,0,0,0]], 
             'W': [[0,1,1,0,1,1,0,0,0,0,0,1,0,1], [0,0,1,0,1,0,0,0,0,0,0,1,0,1]], 
@@ -660,23 +659,16 @@
         }
 
         function shareScore() {
-            let text = `NEOCARVE Sector #${daysPassed} 🪚
-`;
-            text += `Total Score: ${globalScore} 🏆
-`;
-            text += `Combos Executed: ${usedWordsThisSession.length}/${MAX_COMBOS} ✨
-
-`;
-            text += `${dailyWord}
-`;
+            let text = `NEOCARVE Sector #${daysPassed} 🪚\n`;
+            text += `Total Score: ${globalScore} 🏆\n`;
+            text += `Combos Executed: ${usedWordsThisSession.length}/${MAX_COMBOS} ✨\n\n`;
+            text += `${dailyWord}\n`;
             
             carvesRecord.forEach(record => {
-                text += `${record}
-`;
+                text += `${record}\n`;
             });
             
-            text += `
-Play at: lachlanmcfarlane-a11y.github.io/word_carver`;
+            text += `\nPlay at: lachlanmcfarlane-a11y.github.io/word_carver`;
 
             navigator.clipboard.writeText(text).then(() => {
                 alert("Log copied to clipboard. Ready to transmit.");
@@ -689,8 +681,7 @@ Play at: lachlanmcfarlane-a11y.github.io/word_carver`;
             let realDay = Math.floor((new Date().getTime() - START_DATE) / (1000 * 60 * 60 * 24));
             let currentOverride = localStorage.getItem('carver_dev_day') !== null ? parseInt(localStorage.getItem('carver_dev_day')) : realDay;
             
-            let targetDay = prompt(`SYS: REAL WORLD SECTOR IS ${realDay}.
-Enter a past sector number (0 to ${realDay}) to travel to:`, currentOverride);
+            let targetDay = prompt(`SYS: REAL WORLD SECTOR IS ${realDay}.\nEnter a past sector number (0 to ${realDay}) to travel to:`, currentOverride);
             
             if (targetDay === null || targetDay === "") return;
             targetDay = parseInt(targetDay);
@@ -730,7 +721,7 @@ Enter a past sector number (0 to ${realDay}) to travel to:`, currentOverride);
             }
         }
 
-        window.onload = () => loadDictionary(); buildHelpUI();
+        window.onload = () => { loadDictionary(); buildHelpUI(); };
     </script>
 </body>
 </html>
