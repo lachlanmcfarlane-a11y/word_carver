@@ -172,11 +172,50 @@
         }
         
         .dev-controls { margin-top: 40px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-    </style>
+    
+        .top-bar { display: flex; justify-content: center; align-items: center; position: relative; margin-top: 10px; }
+        .top-bar h1 { margin: 0; }
+        .help-container { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); }
+        .help-btn-icon { 
+            background: transparent; color: var(--accent); border: 1px dashed var(--accent);
+            border-radius: 50%; width: 35px; height: 35px; font-weight: bold; font-size: 1.2rem;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            font-family: inherit;
+        }
+        .help-btn-icon:hover { background: #0a1f10; }
+        .help-modal {
+            display: none; position: absolute; top: 45px; right: 0; width: 300px; max-height: 70vh;
+            overflow-y: auto; background: var(--bg); border: 1px solid var(--accent);
+            border-radius: 8px; padding: 15px; z-index: 100; box-shadow: 0 0 20px rgba(0,255,65,0.2);
+            text-align: center; font-size: 0.85rem;
+        }
+        .help-container:hover .help-modal { display: block; }
+        
+        @media (min-width: 600px) {
+            .help-modal { width: 450px; }
+        }
+        
+        .help-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px;}
+        .help-card { border: 1px solid #143d20; background: var(--panel); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; align-items: center; }
+        .help-card-title { color: #fff; font-weight: bold; margin-bottom: 5px; font-size: 1.1rem;}
+        .help-card-svgs { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;}
+</style>
 </head>
 <body>
 
-    <h1>NEOCARVE</h1>
+    
+    <div class="top-bar">
+        <h1>NEOCARVE</h1>
+        <div class="help-container">
+            <button class="help-btn-icon" onclick="document.getElementById('help-modal').style.display = document.getElementById('help-modal').style.display === 'block' ? 'none' : 'block'">?</button>
+            <div id="help-modal" class="help-modal">
+                <div style="color:var(--accent); font-size:1.2rem; font-weight:bold; letter-spacing: 2px;">SEGMENT REGISTRY</div>
+                <p style="margin-top:5px; margin-bottom: 10px;">Valid configurations for the parser.</p>
+                <div id="help-grid" class="help-grid"></div>
+            </div>
+        </div>
+    </div>
+
     <p id="date-display">Loading...</p>
     
     <div id="banner" class="banner">SYS: LOADING DICTIONARY...</div>
@@ -270,32 +309,32 @@
         }
 
         const MAPPING = {
-            'A': [[1,1,1,0,1,1,1,1,0,0,0,0,0,0], [1,1,1,1,1,1,1,1,0,0,0,0,0,0]],
+            'A': [[1,1,1,0,1,1,1,1,0,0,0,0,0,0]],
             'B': [[1,1,1,1,0,0,1,1,0,1,0,0,1,0], [0,0,1,1,1,1,1,1,0,0,0,0,0,0], [0,0,1,1,1,1,1,0,0,0,0,0,0,0]], 
-            'C': [[1,0,0,1,1,1,0,0,0,0,0,0,0,0], [0,0,0,1,1,0,1,0,0,0,0,0,0,0], [0,0,0,1,1,0,0,0,0,0,0,0,0,0]], 
+            'C': [[1,0,0,1,1,1,0,0,0,0,0,0,0,0], [0,0,0,1,1,0,1,0,0,0,0,0,0,0]], 
             'D': [[1,1,1,1,0,0,0,0,0,1,0,0,1,0], [0,1,1,1,1,0,1,1,0,0,0,0,0,0], [0,1,1,1,1,0,1,0,0,0,0,0,0,0]], 
-            'E': [[1,0,0,1,1,1,1,1,0,0,0,0,0,0], [1,1,0,1,1,1,1,1,0,0,0,0,0,0]],
+            'E': [[1,0,0,1,1,1,1,1,0,0,0,0,0,0]],
             'F': [[1,0,0,0,1,1,1,0,0,0,0,0,0,0]],
             'G': [[1,0,1,1,1,1,0,1,0,0,0,0,0,0]],
-            'H': [[0,1,1,0,1,1,1,1,0,0,0,0,0,0], [0,0,1,0,1,1,1,1,0,0,0,0,0,0], [0,0,1,0,1,0,1,0,0,0,0,0,0,0]], 
+            'H': [[0,1,1,0,1,1,1,1,0,0,0,0,0,0], [0,0,1,0,1,1,1,1,0,0,0,0,0,0]], 
             'I': [[1,0,0,1,0,0,0,0,0,1,0,0,1,0], [0,0,0,0,0,0,0,0,0,1,0,0,1,0], [0,1,1,0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,1,1,0,0,0,0,0,0,0,0], [0,0,1,0,0,0,0,0,0,0,0,0,0,0]], 
             'J': [[0,1,1,1,1,0,0,0,0,0,0,0,0,0]],
             'K': [[0,0,0,0,1,1,1,0,0,0,1,0,0,1], [0,0,0,0,1,1,0,0,0,0,1,0,0,1]],
-            'L': [[0,0,0,1,1,1,0,0,0,0,0,0,0,0], [0,0,0,1,0,1,0,0,0,0,0,0,0,0]], 
+            'L': [[0,0,0,1,1,1,0,0,0,0,0,0,0,0]], 
             'M': [[0,1,1,0,1,1,0,0,1,0,1,0,0,0]],
-            'N': [[0,1,1,0,1,1,0,0,1,0,0,0,0,1], [0,0,1,0,1,0,1,1,0,0,0,0,0,0], [0,0,1,0,1,0,1,0,0,0,0,0,0,0]], 
-            'O': [[1,1,1,1,1,1,0,0,0,0,0,0,0,0], [0,0,1,1,1,0,1,1,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,1,0,1,1,0,1], [0,0,1,1,1,0,1,0,0,0,0,0,0,0]], 
+            'N': [[0,1,1,0,1,1,0,0,1,0,0,0,0,1], [0,0,1,0,1,0,1,1,0,0,0,0,0,0], [0,0,0,0,0,1,0,0,1,1,0,0,0,0], [0,0,1,0,0,0,0,0,0,0,0,0,1,1]], 
+            'O': [[1,1,1,1,1,1,0,0,0,0,0,0,0,0], [0,0,1,1,1,0,1,1,0,0,0,0,0,0]], 
             'P': [[1,1,0,0,1,1,1,1,0,0,0,0,0,0]],
             'Q': [[1,1,1,1,1,1,0,0,0,0,0,0,0,1]],
             'R': [[1,1,0,0,1,1,1,1,0,0,0,0,0,1], [0,0,0,0,1,0,1,0,0,0,0,0,0,0]], 
-            'S': [[1,0,1,1,0,1,1,1,0,0,0,0,0,0]],
+            'S': [[1,0,1,1,0,1,1,1,0,0,0,0,0,0], [1,0,0,0,0,0,1,0,1,0,0,0,0,0], [0,0,0,1,0,0,0,1,0,0,0,0,0,1]],
             'T': [[1,0,0,0,0,0,0,0,0,1,0,0,1,0], [0,0,0,1,1,1,1,1,0,0,0,0,0,0]], 
             'U': [[0,1,1,1,1,1,0,0,0,0,0,0,0,0], [0,0,1,1,1,0,0,0,0,0,0,0,0,0]], 
-            'V': [[0,1,0,0,0,1,0,0,0,0,0,1,0,1], [0,0,0,0,0,0,0,0,1,0,1,0,0,0], [0,0,0,0,0,1,0,0,0,0,1,0,0,0], [0,1,0,0,0,0,0,0,1,0,0,0,0,0], [0,0,0,0,1,1,0,0,0,0,1,0,0,0], [0,1,1,0,0,0,0,0,1,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0,0,1,0,1]], 
-            'W': [[0,1,1,0,1,1,0,0,0,0,0,1,0,1], [0,0,0,0,0,0,0,0,1,0,1,1,0,1], [0,0,0,1,0,0,0,0,0,0,0,1,0,1]], 
+            'V': [[0,1,0,0,0,1,0,0,0,0,0,1,0,1], [0,0,0,0,0,0,0,0,1,0,1,0,0,0]], 
+            'W': [[0,1,1,0,1,1,0,0,0,0,0,1,0,1], [0,0,1,0,1,0,0,0,0,0,0,1,0,1]], 
             'X': [[0,0,0,0,0,0,0,0,1,0,1,1,0,1]],
             'Y': [[0,0,0,0,0,0,0,0,1,0,1,0,1,0], [0,1,0,0,0,1,1,1,0,0,0,0,1,0]],
-            'Z': [[1,0,0,1,0,0,0,0,0,0,1,1,0,0]],
+            'Z': [[1,0,0,1,0,0,0,0,0,0,1,1,0,0], [0,0,0,1,0,0,1,0,0,0,0,1,0,0], [1,0,0,0,0,0,0,1,0,0,1,0,0,0]],
             ' ': [[0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
         };
 
@@ -311,6 +350,31 @@
             {x1:50, y1:15, x2:50, y2:65}, {x1:85, y1:15, x2:55, y2:65}, {x1:15, y1:125, x2:45, y2:75},
             {x1:50, y1:125, x2:50, y2:75}, {x1:85, y1:125, x2:55, y2:75}
         ];
+
+        
+        function buildHelpUI() {
+            let html = '';
+            for (let char in MAPPING) {
+                if (char === ' ') continue;
+                html += `<div class="help-card">
+                            <div class="help-card-title">${char}</div>
+                            <div class="help-card-svgs">`;
+                
+                MAPPING[char].forEach(stateArr => {
+                    html += `<svg viewBox="0 0 100 140" style="width:25px; height:35px;">`;
+                    for(let i=0; i<14; i++) {
+                        let isOn = stateArr[i];
+                        let classStr = isOn ? 'seg-on' : 'seg-off';
+                        html += `<line x1="${SEGMENT_LINES[i].x1}" y1="${SEGMENT_LINES[i].y1}" x2="${SEGMENT_LINES[i].x2}" y2="${SEGMENT_LINES[i].y2}" class="${classStr}" stroke-width="14" stroke-linecap="round"></line>`;
+                    }
+                    html += `</svg>`;
+                });
+                
+                html += `   </div>
+                         </div>`;
+            }
+            document.getElementById('help-grid').innerHTML = html;
+        }
 
         const EMOJI_NUMS = ['0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣'];
         function getEmojiNum(n) {
@@ -666,7 +730,7 @@ Enter a past sector number (0 to ${realDay}) to travel to:`, currentOverride);
             }
         }
 
-        window.onload = () => loadDictionary();
+        window.onload = () => loadDictionary(); buildHelpUI();
     </script>
 </body>
 </html>
