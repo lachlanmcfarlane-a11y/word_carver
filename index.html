@@ -67,10 +67,16 @@
             max-width: 100%; 
         }
         
+        .letter-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 2px;
+        }
+
         .letter { 
             width: clamp(40px, 10vw, 65px); 
             height: clamp(55px, 14vw, 90px); 
-            margin: 3px; 
             display: inline-block; 
         }
         
@@ -83,6 +89,31 @@
         .seg-on { stroke: var(--accent); filter: drop-shadow(0 0 4px var(--accent-glow)); }
         .seg-off { stroke: var(--off-seg); }
         .seg-invalid { stroke: var(--danger); filter: drop-shadow(0 0 4px var(--danger-glow)); }
+
+        .btn-hide { 
+            background: transparent; 
+            color: #143d20; 
+            border: 1px solid #143d20; 
+            font-size: 0.65rem; 
+            padding: 3px; 
+            margin-top: 8px; 
+            cursor: pointer; 
+            border-radius: 4px;
+            font-family: inherit;
+            width: 100%;
+            max-width: 50px;
+            text-align: center;
+            transition: 0.2s;
+        }
+        .btn-hide:active { background: #0a1f10; }
+        .btn-hide.active {
+            color: #000;
+            background: var(--danger);
+            border-color: var(--danger);
+            box-shadow: 0 0 5px var(--danger-glow);
+            font-weight: bold;
+        }
+        .btn-hide:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .stats-box { margin: 15px auto; color: #a1a1aa; font-size: 1rem; max-width: 600px; }
         .parsed-text { 
@@ -130,7 +161,8 @@
         .gallery { max-width: 600px; margin: 30px auto; text-align: left; }
         .gallery-item { background: var(--panel); padding: 12px; margin: 10px 0; border-radius: 6px; border-left: 4px solid var(--accent); display: flex; align-items: center; justify-content: space-between; }
         .gallery-svgs { display: flex; flex-wrap: wrap;}
-        .gallery-svgs .letter { width: 25px; height: 35px; margin: 1px; stroke-width: 12;}
+        .gallery-svgs .letter-wrapper { margin: 1px; }
+        .gallery-svgs .letter { width: 25px; height: 35px; stroke-width: 12;}
         .gallery-info { text-align: right; min-width: 100px; }
         .gallery-info h3 { margin: 0 0 2px 0; color: #fff; font-size: 1.1rem; }
         .gallery-info p { margin: 0; font-size: 0.8rem; color: #a1a1aa; }
@@ -151,7 +183,7 @@
 
     <div class="header-panel">
         <div>COMBOS <span id="combos-count">0/5</span></div>
-        <div>CARVES <span id="edits-left">12</span></div>
+        <div>CARVES <span id="edits-left">10</span></div>
         <div>SCORE <span id="global-score">0</span></div>
     </div>
 
@@ -199,7 +231,7 @@
 
         document.getElementById('date-display').innerText = `SECTOR #${daysPassed} // BASE: ${dailyWord}`;
 
-        const MAX_EDITS = 12;
+        const MAX_EDITS = 10;
         const MAX_COMBOS = 5;
         let dictionary = new Set();
         let isDictLoaded = false;
@@ -207,6 +239,7 @@
         let startingState = []; 
         let currentState = []; 
         let editsMade = 0; 
+        let hiddenLetterIndex = -1;
         
         let globalScore = 0;
         let usedWordsThisSession = []; 
@@ -294,6 +327,7 @@
                 let savedBoard = JSON.parse(localStorage.getItem('carver_board_state'));
                 currentState = savedBoard || defaultState.map(arr => [...arr]);
                 
+                hiddenLetterIndex = parseInt(localStorage.getItem('carver_hidden_index')) || -1;
                 globalScore = parseInt(localStorage.getItem('carver_daily_score')) || 0;
                 
                 let savedCombos = JSON.parse(localStorage.getItem('carver_used_combos'));
@@ -312,6 +346,7 @@
                 
             } else {
                 currentState = defaultState.map(arr => [...arr]);
+                hiddenLetterIndex = -1;
                 globalScore = 0;
                 usedWordsThisSession = [];
                 usedIndividualWords.clear();
@@ -323,14 +358,10 @@
                 localStorage.setItem('carver_used_individual_words', JSON.stringify([]));
                 localStorage.setItem('carver_record', JSON.stringify([]));
                 localStorage.setItem('carver_board_state', JSON.stringify(currentState));
+                localStorage.setItem('carver_hidden_index', hiddenLetterIndex);
             }
             
-            editsMade = 0;
-            for(let i=0; i<currentState.length; i++) {
-                for(let j=0; j<14; j++) {
-                    if (currentState[i][j] !== startingState[i][j]) editsMade++;
-                }
-            }
+            recalculateEdits();
 
             if (usedWordsThisSession.length >= MAX_COMBOS) {
                 isGameLocked = true;
@@ -342,7 +373,20 @@
             updateStats();
         }
 
-        function getLetterChar(stateArr) { return VALID_STATE_MAP[stateArr.join(',')] || '?'; }
+        function recalculateEdits() {
+            editsMade = 0;
+            for(let i=0; i<currentState.length; i++) {
+                if (i === hiddenLetterIndex) continue; // Hiding a letter completely bypasses its edit cost
+                for(let j=0; j<14; j++) {
+                    if (currentState[i][j] !== startingState[i][j]) editsMade++;
+                }
+            }
+        }
+
+        function getLetterChar(stateArr, letterIdx) { 
+            if (letterIdx === hiddenLetterIndex) return ' ';
+            return VALID_STATE_MAP[stateArr.join(',')] || '?'; 
+        }
 
         function toggleSegment(letterIdx, segIdx) {
             if (isGameLocked) return;
@@ -358,11 +402,28 @@
 
             currentState[letterIdx][segIdx] ^= 1;
             
-            editsMade = 0;
-            for(let i=0; i<currentState.length; i++) {
-                for(let j=0; j<14; j++) {
-                    if (currentState[i][j] !== startingState[i][j]) editsMade++;
-                }
+            recalculateEdits();
+            renderMainWord();
+            updateStats();
+        }
+
+        function toggleHide(idx) {
+            if (isGameLocked) return;
+            
+            let prevHidden = hiddenLetterIndex;
+            // Toggle off if clicking the currently hidden one, else swap to the new one
+            hiddenLetterIndex = (hiddenLetterIndex === idx) ? -1 : idx;
+            
+            recalculateEdits();
+            
+            // If unhiding (or swapping) causes the edit count to exceed MAX_EDITS, block it
+            if (editsMade > MAX_EDITS) {
+                hiddenLetterIndex = prevHidden; // Revert
+                recalculateEdits();
+                let el = document.getElementById('edits-left');
+                el.classList.add('danger');
+                setTimeout(() => el.classList.remove('danger'), 300);
+                return;
             }
             
             renderMainWord();
@@ -372,28 +433,41 @@
         function resetBoard() {
             if (isGameLocked) return;
             currentState = startingState.map(arr => [...arr]);
-            editsMade = 0;
+            hiddenLetterIndex = -1;
+            recalculateEdits();
             renderMainWord();
             updateStats();
         }
 
         function getSVGHTML(stateArr, letterIdx, interactive) {
-            let char = getLetterChar(stateArr);
+            let isHidden = (letterIdx === hiddenLetterIndex);
+            let char = getLetterChar(stateArr, letterIdx);
             let isInvalid = (char === '?');
-            let svg = `<svg viewBox="0 0 100 140" class="letter ${interactive && !isGameLocked ? 'interactive' : ''}">`;
+            
+            let svg = `<svg viewBox="0 0 100 140" class="letter ${interactive && !isGameLocked && !isHidden ? 'interactive' : ''}" style="${isHidden ? 'opacity: 0.15;' : ''}">`;
             for(let i=0; i<14; i++) {
-                let isOn = stateArr[i];
+                let isOn = isHidden ? 0 : stateArr[i];
                 let classStr = isOn ? (isInvalid ? 'seg-invalid' : 'seg-on') : 'seg-off';
-                let events = interactive && !isGameLocked ? `onpointerdown="toggleSegment(${letterIdx}, ${i})"` : '';
+                let events = interactive && !isGameLocked && !isHidden ? `onpointerdown="toggleSegment(${letterIdx}, ${i})"` : '';
                 
                 svg += `<line x1="${SEGMENT_LINES[i].x1}" y1="${SEGMENT_LINES[i].y1}" x2="${SEGMENT_LINES[i].x2}" y2="${SEGMENT_LINES[i].y2}" class="${classStr}"></line>`;
                 
-                if (interactive && !isGameLocked) {
+                if (interactive && !isGameLocked && !isHidden) {
                     svg += `<line x1="${SEGMENT_LINES[i].x1}" y1="${SEGMENT_LINES[i].y1}" x2="${SEGMENT_LINES[i].x2}" y2="${SEGMENT_LINES[i].y2}" stroke="transparent" stroke-width="25" style="cursor:pointer;" ${events}></line>`;
                 }
             }
             svg += `</svg>`;
-            return svg;
+            
+            if (interactive) {
+                let btnClass = isHidden ? 'btn-hide active' : 'btn-hide';
+                let btnText = isHidden ? 'VOID' : 'HIDE';
+                return `<div class="letter-wrapper">
+                            ${svg}
+                            <button class="${btnClass}" onpointerdown="toggleHide(${letterIdx})" ${isGameLocked ? 'disabled' : ''}>${btnText}</button>
+                        </div>`;
+            } else {
+                return `<div class="letter-wrapper">${svg}</div>`; // For gallery layout compatibility
+            }
         }
 
         function renderMainWord() {
@@ -409,7 +483,7 @@
                 return;
             }
 
-            let currentChars = currentState.map(getLetterChar);
+            let currentChars = currentState.map((state, idx) => getLetterChar(state, idx));
             document.getElementById('parsed-reading').innerHTML = currentChars.map(c => c === ' ' ? '&nbsp;' : (c === '?' ? '<span class="invalid">?</span>' : c)).join('');
 
             let words = currentChars.join('').split(/ +/).filter(w => w.length > 0);
@@ -417,16 +491,13 @@
             moveBaseScore = 0;
             canSubmit = false;
 
-            // Loop through words and collect valid ones instead of breaking early on an error
+            // Only score the components that form valid dictionary words
             for (let w of words) {
-                if (w.includes('?')) {
-                    continue; 
-                }
+                if (w.includes('?')) continue; 
+                
                 if (dictionary.size === 0 || dictionary.has(w.toUpperCase())) {
                     bestValidWordsArr.push(w.toUpperCase());
                     moveBaseScore += (w.length * w.length * 10);
-                } else {
-                    continue; 
                 }
             }
 
@@ -439,7 +510,7 @@
             
             let wordDisplay = document.getElementById('current-valid-word');
             
-            if (editsMade === 0) {
+            if (editsMade === 0 && hiddenLetterIndex === -1) {
                 wordDisplay.innerText = "AWAITING INPUT...";
                 wordDisplay.style.color = "#71717a";
                 canSubmit = false;
@@ -456,7 +527,7 @@
                     canSubmit = true;
                 }
             } else {
-                wordDisplay.innerText = "ERR: INVALID SYNTAX";
+                wordDisplay.innerText = "ERR: NO VALID TARGETS";
                 wordDisplay.style.color = "var(--danger)";
                 canSubmit = false;
             }
@@ -465,7 +536,8 @@
         }
 
         function saveCombo() {
-            if (!canSubmit || editsMade === 0 || isGameLocked) return;
+            if (!canSubmit || isGameLocked) return;
+            if (editsMade === 0 && hiddenLetterIndex === -1) return;
             
             let comboStr = bestValidWordsArr.join(' + ');
             let editsLeft = MAX_EDITS - editsMade;
@@ -478,16 +550,20 @@
             
             let carvesPerLetter = [];
             for (let i = 0; i < currentState.length; i++) {
+                if (i === hiddenLetterIndex) {
+                    carvesPerLetter.push('❌'); // Use '❌' emoji for a voided letter
+                    continue;
+                }
                 let diff = 0;
                 for (let j = 0; j < 14; j++) {
                     if (currentState[i][j] !== startingState[i][j]) diff++;
                 }
-                carvesPerLetter.push(diff);
+                carvesPerLetter.push(getEmojiNum(diff));
             }
-            carvesRecord.push(carvesPerLetter.map(getEmojiNum).join(''));
+            carvesRecord.push(carvesPerLetter.join(''));
             
             let html = `<div class="gallery-item">
-                <div class="gallery-svgs">${currentState.map(state => getSVGHTML(state, 0, false)).join('')}</div>
+                <div class="gallery-svgs">${currentState.map((state, idx) => getSVGHTML(state, idx, false)).join('')}</div>
                 <div class="gallery-info">
                     <h3>${comboStr}</h3>
                     <p>+${finalScore} PTS (Cost: ${editsMade})</p>
@@ -495,14 +571,17 @@
             </div>`;
             document.getElementById('gallery-container').insertAdjacentHTML('afterbegin', html);
 
+            // Reset board logic
             currentState = startingState.map(arr => [...arr]);
-            editsMade = 0;
+            hiddenLetterIndex = -1;
+            recalculateEdits();
             
             localStorage.setItem('carver_daily_score', globalScore);
             localStorage.setItem('carver_used_combos', JSON.stringify(usedWordsThisSession));
             localStorage.setItem('carver_used_individual_words', JSON.stringify([...usedIndividualWords]));
             localStorage.setItem('carver_record', JSON.stringify(carvesRecord));
             localStorage.setItem('carver_board_state', JSON.stringify(currentState));
+            localStorage.setItem('carver_hidden_index', hiddenLetterIndex);
             
             document.getElementById('global-score').innerText = globalScore;
             document.getElementById('combos-count').innerText = `${usedWordsThisSession.length}/${MAX_COMBOS}`;
@@ -517,16 +596,23 @@
         }
 
         function shareScore() {
-            let text = `NEOCARVE Sector #${daysPassed} 🪚\n`;
-            text += `Total Score: ${globalScore} 🏆\n`;
-            text += `Combos Executed: ${usedWordsThisSession.length}/${MAX_COMBOS} ✨\n\n`;
-            text += `${dailyWord}\n`;
+            let text = `NEOCARVE Sector #${daysPassed} 🪚
+`;
+            text += `Total Score: ${globalScore} 🏆
+`;
+            text += `Combos Executed: ${usedWordsThisSession.length}/${MAX_COMBOS} ✨
+
+`;
+            text += `${dailyWord}
+`;
             
             carvesRecord.forEach(record => {
-                text += `${record}\n`;
+                text += `${record}
+`;
             });
             
-            text += `\nPlay at: lachlanmcfarlane-a11y.github.io/word_carver`;
+            text += `
+Play at: lachlanmcfarlane-a11y.github.io/word_carver`;
 
             navigator.clipboard.writeText(text).then(() => {
                 alert("Log copied to clipboard. Ready to transmit.");
@@ -539,7 +625,8 @@
             let realDay = Math.floor((new Date().getTime() - START_DATE) / (1000 * 60 * 60 * 24));
             let currentOverride = localStorage.getItem('carver_dev_day') !== null ? parseInt(localStorage.getItem('carver_dev_day')) : realDay;
             
-            let targetDay = prompt(`SYS: REAL WORLD SECTOR IS ${realDay}.\nEnter a past sector number (0 to ${realDay}) to travel to:`, currentOverride);
+            let targetDay = prompt(`SYS: REAL WORLD SECTOR IS ${realDay}.
+Enter a past sector number (0 to ${realDay}) to travel to:`, currentOverride);
             
             if (targetDay === null || targetDay === "") return;
             targetDay = parseInt(targetDay);
@@ -559,6 +646,7 @@
             localStorage.removeItem('carver_used_individual_words');
             localStorage.removeItem('carver_record');
             localStorage.removeItem('carver_board_state');
+            localStorage.removeItem('carver_hidden_index');
             
             localStorage.setItem('carver_dev_day', targetDay);
             location.reload();
@@ -573,6 +661,7 @@
                 localStorage.removeItem('carver_record');
                 localStorage.removeItem('carver_board_state');
                 localStorage.removeItem('carver_dev_day');
+                localStorage.removeItem('carver_hidden_index');
                 location.reload();
             }
         }
