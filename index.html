@@ -576,7 +576,7 @@
             document.getElementById('main-word').innerHTML = currentState.map((state, i) => getSVGHTML(state, i, true)).join('');
         }
 
-        function updateStats() {
+       function updateStats() {
             if (isGameLocked) {
                 document.getElementById('current-valid-word').innerText = "SECTOR COMPLETE.";
                 document.getElementById('current-valid-word').style.color = "var(--accent)";
@@ -618,9 +618,14 @@
                 canSubmit = false;
             } else if (bestValidWordsArr.length > 0) {
                 let reusedWord = bestValidWordsArr.find(w => usedIndividualWords.has(w));
+                let matchesBase = bestValidWordsArr.find(w => w === dailyWord);
                 
                 if (reusedWord) {
                     wordDisplay.innerText = `ERR: '${reusedWord}' DUPLICATE`;
+                    wordDisplay.style.color = "var(--danger)";
+                    canSubmit = false;
+                } else if (matchesBase) {
+                    wordDisplay.innerText = `ERR: BASE WORD RESTRICTED`;
                     wordDisplay.style.color = "var(--danger)";
                     canSubmit = false;
                 } else {
