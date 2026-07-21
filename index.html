@@ -190,6 +190,7 @@
             text-align: center; font-size: 0.85rem;
         }
         .help-container:hover .help-modal { display: block; }
+        .history-container:hover .help-modal { display: block; }
         
         @media (min-width: 600px) {
             .help-modal { width: 450px; }
@@ -204,6 +205,14 @@
 <body>
 
     <div class="top-bar">
+        <div class="history-container" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); z-index: 101;">
+            <button class="help-btn-icon" onclick="document.getElementById('history-modal').style.display = document.getElementById('history-modal').style.display === 'block' ? 'none' : 'block'">📊</button>
+            <div id="history-modal" class="help-modal" style="left: 0; right: auto; text-align: left;">
+                <div style="color:var(--accent); font-size:1.2rem; font-weight:bold; letter-spacing: 2px; text-align: center;">SYS LOGS</div>
+                <div id="history-stats" style="margin: 15px 0; border-bottom: 1px dashed #143d20; padding-bottom: 10px;"></div>
+                <div id="history-list" style="max-height: 300px; overflow-y: auto; font-size: 0.85rem; padding-right: 5px;"></div>
+            </div>
+        </div>
         <h1>NEOCARVE</h1>
         <div class="help-container">
             <button class="help-btn-icon" onclick="document.getElementById('help-modal').style.display = document.getElementById('help-modal').style.display === 'block' ? 'none' : 'block'">?</button>
@@ -347,31 +356,31 @@
         }
 
         const MAPPING = {
-            'A': [[1,1,1,0,1,1,1,1,0,0,0,0,0,0], [1,1,1,1,1,0,1,1,0,0,0,0,0,0]],
+            'A': [[1,1,1,0,1,1,1,1,0,0,0,0,0,0], [1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0]],
             'B': [[1,1,1,1,0,0,1,1,0,1,0,0,1,0], [0,0,1,1,1,1,1,1,0,0,0,0,0,0], [0,0,1,1,1,1,1,0,0,0,0,0,0,0]], 
             'C': [[1,0,0,1,1,1,0,0,0,0,0,0,0,0], [0,0,0,1,1,0,1,0,0,0,0,0,0,0]], 
             'D': [[1,1,1,1,0,0,0,0,0,1,0,0,1,0], [0,1,1,1,1,0,1,1,0,0,0,0,0,0], [0,1,1,1,1,0,1,0,0,0,0,0,0,0]], 
-            'E': [[1,0,0,1,1,1,1,1,0,0,0,0,0,0], [1,0,0,1,1,1,1,0,0,0,0,0,0,0]],
+            'E': [[1,0,0,1,1,1,1,1,0,0,0,0,0,0], [1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0]],
             'F': [[1,0,0,0,1,1,1,0,0,0,0,0,0,0]],
-            'G': [[1,0,1,1,1,1,0,1,0,0,0,0,0,0], [1,1,1,1,0,1,1,1,0,0,0,0,0,0]],
+            'G': [[1,0,1,1,1,1,0,1,0,0,0,0,0,0], [1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0]],
             'H': [[0,1,1,0,1,1,1,1,0,0,0,0,0,0], [0,0,1,0,1,1,1,1,0,0,0,0,0,0]], 
             'I': [[1,0,0,1,0,0,0,0,0,1,0,0,1,0], [0,0,0,0,0,0,0,0,0,1,0,0,1,0], [0,1,1,0,0,0,0,0,0,0,0,0,0,0], [0,0,0,0,1,1,0,0,0,0,0,0,0,0], [0,0,1,0,0,0,0,0,0,0,0,0,0,0]], 
             'J': [[0,1,1,1,1,0,0,0,0,0,0,0,0,0]],
             'K': [[0,0,0,0,1,1,1,0,0,0,1,0,0,1], [0,0,0,0,1,1,0,0,0,0,1,0,0,1]],
             'L': [[0,0,0,1,1,1,0,0,0,0,0,0,0,0]], 
-            'M': [[0,1,1,0,1,1,0,0,1,0,1,0,0,0], [0,1,0,0,0,1,0,0,1,0,1,0,0,0]],
+            'M': [[0,1,1,0,1,1,0,0,1,0,1,0,0,0], [0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0]],
             'N': [[0,1,1,0,1,1,0,0,1,0,0,0,0,1], [0,0,1,0,1,0,1,1,0,0,0,0,0,0], [0,0,0,0,0,1,0,0,1,1,0,0,0,0], [0,0,1,0,0,0,0,0,0,0,0,0,1,1]], 
             'O': [[1,1,1,1,1,1,0,0,0,0,0,0,0,0], [0,0,1,1,1,0,1,1,0,0,0,0,0,0]], 
             'P': [[1,1,0,0,1,1,1,1,0,0,0,0,0,0]],
             'Q': [[1,1,1,1,1,1,0,0,0,0,0,0,0,1]],
             'R': [[1,1,0,0,1,1,1,1,0,0,0,0,0,1], [0,0,0,0,1,0,1,0,0,0,0,0,0,0]], 
             'S': [[1,0,1,1,0,1,1,1,0,0,0,0,0,0], [1,0,0,0,0,0,1,0,1,0,0,0,0,0], [0,0,0,1,0,0,0,1,0,0,0,0,0,1]],
-            'T': [[1,0,0,0,0,0,0,0,0,1,0,0,1,0], [0,0,0,1,1,1,1,1,0,0,0,0,0,0], [1,0,0,0,0,0,0,0,0,1,0,0,0,0]], 
+            'T': [[1,0,0,0,0,0,0,0,0,1,0,0,1,0], [0,0,0,1,1,1,1,1,0,0,0,0,0,0], [1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0]], 
             'U': [[0,1,1,1,1,1,0,0,0,0,0,0,0,0], [0,0,1,1,1,0,0,0,0,0,0,0,0,0]], 
             'V': [[0,1,0,0,0,1,0,0,0,0,0,1,0,1], [0,0,0,0,0,0,0,0,1,0,1,0,0,0]], 
             'W': [[0,1,1,0,1,1,0,0,0,0,0,1,0,1], [0,0,1,0,1,0,0,0,0,0,0,1,0,1]], 
             'X': [[0,0,0,0,0,0,0,0,1,0,1,1,0,1]],
-            'Y': [[0,0,0,0,0,0,0,0,1,0,1,0,1,0], [0,1,0,0,0,1,1,1,0,0,0,0,1,0], [0,1,1,0,0,0,0,0,1,0,1,0,0,0]],
+            'Y': [[0,0,0,0,0,0,0,0,1,0,1,0,1,0], [0,1,0,0,0,1,1,1,0,0,0,0,1,0]],
             'Z': [[1,0,0,1,0,0,0,0,0,0,1,1,0,0], [0,0,0,1,0,0,1,0,0,0,0,1,0,0], [1,0,0,0,0,0,0,1,0,0,1,0,0,0]],
             ' ': [[0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
         };
@@ -418,6 +427,47 @@
         function getEmojiNum(n) {
             if (n >= 10) return '🔟';
             return EMOJI_NUMS[n];
+        }
+
+        function updateHistoryUI() {
+            let gameHistory = JSON.parse(localStorage.getItem('carver_history')) || {};
+            let totalScore = 0;
+            let daysPlayed = 0;
+            let keys = Object.keys(gameHistory).map(Number).sort((a,b) => b - a);
+            
+            for (let key of keys) {
+                totalScore += gameHistory[key].score;
+                daysPlayed++;
+            }
+            let avgScore = daysPlayed > 0 ? Math.floor(totalScore / daysPlayed) : 0;
+            
+            let dayOfWeekIndex = (daysPassed + 3) % 7; 
+            let startOfWeekSector = daysPassed - dayOfWeekIndex;
+            
+            let weeklyScore = 0;
+            for (let i = startOfWeekSector; i <= startOfWeekSector + 6; i++) {
+                if (gameHistory[i]) {
+                    weeklyScore += gameHistory[i].score;
+                }
+            }
+            
+            document.getElementById('history-stats').innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>AVG YIELD:</span> <strong style="color:var(--accent)">${avgScore}</strong></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>WEEKLY YIELD:</span> <strong style="color:var(--accent)">${weeklyScore}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span>SECTORS CLEARED:</span> <strong style="color:var(--accent)">${daysPlayed}</strong></div>
+            `;
+            
+            let listHtml = keys.map(k => {
+                let entry = gameHistory[k];
+                return `<div style="border-left: 2px solid var(--accent); padding-left: 8px; margin-bottom: 10px;">
+                    <strong>Sector #${k}</strong> <span style="color:#a1a1aa; font-size: 0.8em;">(${entry.baseWord || '?'})</span><br>
+                    Yield: <span style="color:var(--accent)">${entry.score}</span><br>
+                    <span style="color:#71717a; font-size: 0.8em;">${entry.words.join(' + ')}</span>
+                </div>`;
+            }).join('');
+            
+            if (keys.length === 0) listHtml = "<div style='color:#71717a; text-align:center;'>NO LOGS FOUND.</div>";
+            document.getElementById('history-list').innerHTML = listHtml;
         }
 
         function checkGameState() {
@@ -473,6 +523,7 @@
             document.getElementById('combos-count').innerText = `${usedWordsThisSession.length}/${MAX_COMBOS}`;
             renderMainWord();
             updateStats();
+            updateHistoryUI();
         }
 
         function recalculateEdits() {
@@ -690,6 +741,10 @@
             localStorage.setItem('carver_board_state', JSON.stringify(currentState));
             localStorage.setItem('carver_hidden_index', hiddenLetterIndex);
             
+            let gameHistory = JSON.parse(localStorage.getItem('carver_history')) || {};
+            gameHistory[daysPassed] = { score: globalScore, words: usedWordsThisSession, baseWord: dailyWord };
+            localStorage.setItem('carver_history', JSON.stringify(gameHistory));
+            
             document.getElementById('global-score').innerText = globalScore;
             document.getElementById('combos-count').innerText = `${usedWordsThisSession.length}/${MAX_COMBOS}`;
             
@@ -699,7 +754,8 @@
             }
 
             updateStats();
-            renderMainWord(); 
+            renderMainWord();
+            updateHistoryUI();
         }
 
         function shareScore() {
@@ -761,6 +817,7 @@
                 localStorage.removeItem('carver_board_state');
                 localStorage.removeItem('carver_dev_day');
                 localStorage.removeItem('carver_hidden_index');
+                localStorage.removeItem('carver_history');
                 location.reload();
             }
         }
